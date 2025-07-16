@@ -1,0 +1,33 @@
+name: Download MP3 and Upload
+
+on:
+  workflow_dispatch:  # 手動実行用
+  schedule:
+    - cron: '0 0 * * *'  # 毎日UTC 00:00に実行 (必要に応じて調整可能)
+
+jobs:
+  download-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download MP3 from Web Archive
+        run: |
+          wget -O megadenaibushi.mp3 "https://web.archive.org/web/20111223113416/http://www.lbt-web.com/paricco/music/megadenaibushi.mp3"
+          
+      - name: Check if file exists
+        run: |
+          if [ ! -f megadenaibushi.mp3 ]; then
+            echo "Failed to download the MP3 file"
+            exit 1
+          fi
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add megadenaibushi.mp3
+          git commit -m "Add megadenaibushi.mp3 from Web Archive" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
